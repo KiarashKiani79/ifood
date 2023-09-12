@@ -2,11 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:ifood/widgets/error_dialog.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../widgets/custom_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -73,6 +76,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _getAddressFromLatLng();
     } catch (e) {
       print('Error getting current location: $e');
+    }
+  }
+
+  Future<void> _formValidation() async {
+    if (imageFile == null) {
+      return showDialog(
+        context: context,
+        builder: (_) => const ErrorDialog(
+          message: 'Please select an image.',
+        ),
+      );
     }
   }
 
@@ -159,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _formValidation,
               style: ButtonStyle(
                 backgroundColor:
                     MaterialStateProperty.all<Color>(Colors.purple),
