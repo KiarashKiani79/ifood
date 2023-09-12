@@ -79,7 +79,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _formValidation() async {
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) {
+      // Invalid!
+      return;
+    }
     if (imageFile == null) {
       return showDialog(
         context: context,
@@ -88,6 +92,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
     }
+
+    _formKey.currentState!.save();
   }
 
   @override
@@ -124,36 +130,77 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     CustomTextField(
                       controller: nameController,
                       icon: Icons.person,
-                      lableText: "Name",
+                      labelText: "Name",
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Please enter your name";
+                        }
+                        return null;
+                      },
                     ),
                     CustomTextField(
                       controller: emailController,
                       icon: Icons.email,
-                      lableText: "Email",
+                      labelText: "Email",
+                      validator: (value) {
+                        if (value!.isEmpty || !value.contains('@')) {
+                          return 'Please enter a valid email address.';
+                        }
+                        return null;
+                      },
                     ),
                     CustomTextField(
                       controller: passwordController,
                       icon: Icons.lock,
-                      lableText: "Password",
+                      labelText: "Password",
                       isObscure: true,
+                      validator: (value) {
+                        if (value!.isEmpty || value.length < 6) {
+                          return 'Password must be at least 6 characters long.';
+                        }
+                        return null;
+                      },
                     ),
                     CustomTextField(
                       controller: confirmPasswordController,
                       icon: Icons.lock,
-                      lableText: "Confirm Password",
+                      labelText: "Confirm Password",
                       isObscure: true,
+                      validator: (value) {
+                        if (value != passwordController!.text) {
+                          return 'Passwords do not match!';
+                        }
+                        return null;
+                      },
                     ),
                     CustomTextField(
                       controller: phoneController,
                       icon: Icons.phone,
-                      lableText: "Phone",
+                      labelText: "Phone",
                       keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Please enter your phone number.";
+                        }
+                        if (double.tryParse(value) == null ||
+                            double.parse(value) <= 10) {
+                          return "Please enter a valid phone number.";
+                        }
+
+                        return null;
+                      },
                     ),
                     CustomTextField(
                       controller: locationController,
                       icon: Icons.location_on,
-                      lableText: "Cafe/Restaurant Location",
+                      labelText: "Cafe/Restaurant Location",
                       enabled: false,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Please enter your location.";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(
                       width: 250,
@@ -173,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _formValidation,
+              onPressed: _submit,
               style: ButtonStyle(
                 backgroundColor:
                     MaterialStateProperty.all<Color>(Colors.purple),

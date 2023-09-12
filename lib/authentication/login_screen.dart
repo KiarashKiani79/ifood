@@ -35,12 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomTextField(
                       controller: emailController,
                       icon: Icons.email,
-                      lableText: "Email",
+                      labelText: "Email",
                     ),
                     CustomTextField(
                       controller: passwordController,
                       icon: Icons.lock,
-                      lableText: "Password",
+                      labelText: "Password",
                       isObscure: true,
                     ),
                   ],

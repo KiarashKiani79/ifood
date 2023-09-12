@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final IconData? icon;
-  final String? lableText;
+  final String? labelText;
+  String? Function(String?)? validator;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
   final bool isObscure;
   final bool enabled;
 
-  const CustomTextField({
+  CustomTextField({
     Key? key,
     @required this.controller,
     @required this.icon,
-    @required this.lableText,
+    @required this.labelText,
+    @required this.validator,
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.next,
     this.isObscure = false,
@@ -31,6 +33,7 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardType,
         textInputAction: textInputAction,
+        validator: validator,
         obscureText: isObscure,
         enabled: enabled,
         decoration: InputDecoration(
@@ -39,7 +42,7 @@ class CustomTextField extends StatelessWidget {
               Radius.circular(5),
             ),
           ),
-          labelText: lableText,
+          labelText: labelText,
           prefixIcon: Icon(
             icon,
             color: Colors.cyan,

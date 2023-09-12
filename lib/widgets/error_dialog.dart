@@ -11,6 +11,7 @@ class ErrorDialog extends StatelessWidget {
       title: Icon(
         Icons.error_outline,
         color: Theme.of(context).colorScheme.error,
+        size: 30,
       ),
       content: Text(message),
       actions: [
