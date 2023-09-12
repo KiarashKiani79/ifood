@@ -1,11 +1,14 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ifood/widgets/error_dialog.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as fStorage;
 
 import '../widgets/custom_text_field.dart';
+import '../widgets/loading_dialog.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,6 +18,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  bool isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   TextEditingController? nameController = TextEditingController();
@@ -26,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   File? imageFile;
   final ImagePicker _picker = ImagePicker();
+  String? sellerImageUrl;
 
   Position? _currentPosition;
   List<Placemark>? _placemarks;
@@ -54,16 +59,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _getCurrentLocation() async {
+    setState(() {
+      isLoading = true;
+    });
     // Check if the app has permission to access location
     LocationPermission permission;
     permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      print('Location permission denied by user');
+      if (kDebugMode) {
+        print('Location permission denied by user');
+      }
     } else if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
-      print('log');
+      if (kDebugMode) {
+        print(
+            "the app has been granted permission to access the device's location at any time.");
+      }
     }
 
     try {
@@ -75,13 +88,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
       _getAddressFromLatLng();
     } catch (e) {
-      print('Error getting current location: $e');
+      if (kDebugMode) {
+        print('Error getting current location: $e');
+      }
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
-      // Invalid!
       return;
     }
     if (imageFile == null) {
@@ -94,6 +112,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     _formKey.currentState!.save();
+    try {
+      showDialog(
+        context: context,
+        builder: (_) => const LoadingDialog(
+          message: 'Registering Account',
+        ),
+      );
+
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+      final fStorage.Reference reference = fStorage.FirebaseStorage.instance
+          .ref()
+          .child('sellers')
+          .child(fileName);
+      final fStorage.UploadTask uploadTask = reference.putFile(imageFile!);
+      final fStorage.TaskSnapshot storageTaskSnapshot =
+          await uploadTask.whenComplete(() => null);
+      final String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+      sellerImageUrl = downloadUrl;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error: $e');
+      }
+    }
   }
 
   @override
@@ -205,13 +247,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     SizedBox(
                       width: 250,
                       height: 40,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          _getCurrentLocation();
-                        },
-                        icon: const Icon(Icons.add_location),
-                        label: const Text("Get My Current Location"),
-                      ),
+                      child: Stack(children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _getCurrentLocation();
+                          },
+                          icon: const Icon(Icons.add_location),
+                          label: const Text("Get My Current Location"),
+                        ),
+                        if (isLoading)
+                          const Positioned.fill(
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      ]),
                     ),
                     const SizedBox(height: 10),
                   ],
